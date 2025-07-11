@@ -1,9 +1,0 @@
-server:
-  host: "0.0.0.0"
-  port: 8000
-  ui: true
-
-whisper:
-  model_name: "turbo"
-  device: "cuda"
-  compute_type: "int8"
