@@ -26,7 +26,7 @@ model = None
 def load_model():
     global model
     logger.info("Loading whisper model...")
-    model = whisper.load_model("medium", device="cuda")
+    model = whisper.load_model("medium", device="cuda", in_memory=True)
     logger.info("Whisper model loaded.")
 
 
@@ -199,7 +199,7 @@ async def transcribe_audio(
 def main():
     import uvicorn
     get_keys()
-
+    uvicorn.run(app, host="0.0.0.0", port=9854, log_level="debug")
 
 if __name__ == "__main__":
     main()

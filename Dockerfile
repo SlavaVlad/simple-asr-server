@@ -19,4 +19,4 @@ ENV HSA_OVERRIDE_GFX_VERSION=10.3.0
 ENV PYTORCH_ROCM_ARCH=gfx1030
 
 # Команда для запуска приложения
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "9854", "--log-level", "debug"]
+CMD ["python3", "app.py"]
