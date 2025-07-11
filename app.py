@@ -18,17 +18,6 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-# Load model on startup
-model = None
-
-
-@app.on_event("startup")
-def load_model():
-    global model
-    logger.info("Loading whisper model...")
-    model = whisper.load_model("turbo", device="cuda", in_memory=True)
-    logger.info("Whisper model loaded.")
-
 
 # API key header
 api_key_header = APIKeyHeader(name="x-api-key")
