@@ -26,7 +26,7 @@ model = None
 def load_model():
     global model
     logger.info("Loading whisper model...")
-    model = whisper.load_model("medium", device="cuda", in_memory=True)
+    model = whisper.load_model("turbo", device="cuda", in_memory=True)
     logger.info("Whisper model loaded.")
 
 
@@ -119,7 +119,7 @@ def get_audio_duration(file_path: str) -> float:
 async def transcribe_audio(
         file: UploadFile = File(...),
         token: str = Depends(api_key_header),
-        model_name: str = "medium",
+        model_name: str = "turbo",
         verbose: Optional[bool] = None,
         temperature: Union[float, Tuple[float, ...]] = (0.0, 0.2, 0.4, 0.6, 0.8, 1.0),
         compression_ratio_threshold: Optional[float] = 2.4,
