@@ -1,6 +1,6 @@
 fastapi
 uvicorn[standard]
 python-multipart
-faster-whisper
+openai-whisper
 ffmpeg-python
 PyYAML
