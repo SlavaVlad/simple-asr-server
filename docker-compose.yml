@@ -3,8 +3,6 @@ services:
     build: .
     ports:
       - "9854:9854"
-    volumes:
-      - ./keys.txt:/app/keys.txt
     devices:
       - "/dev/kfd:/dev/kfd"
       - "/dev/dri:/dev/dri"
