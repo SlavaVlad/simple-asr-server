@@ -2,8 +2,6 @@ BASED ON https://github.com/salute-developers/GigaAM
 
 # Simple ASR Server
 
-![GitHub Repo stars](https://img.shields.io/github/stars/SlavaVlad/simple-asr-server?style=social)
-
 This project provides a RESTful API for audio transcription using a Whisper model. The API is built with FastAPI and runs in a Docker container.
 
 ## Prerequisites
