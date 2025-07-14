@@ -4,3 +4,4 @@ python-multipart
 openai-whisper
 ffmpeg-python
 PyYAML
+numpy<2.0.0
