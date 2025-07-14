@@ -1,7 +1,7 @@
 fastapi
 uvicorn[standard]
 python-multipart
-openai-whisper
+gigaam
 ffmpeg-python
 PyYAML
 numpy<2.0.0

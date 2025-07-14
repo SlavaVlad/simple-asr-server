@@ -5,7 +5,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     python3-pip \
-    && rm -rf /var/lib/apt/lists/*
+    python3-venv \
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir --default-timeout=100 -r requirements.txt
