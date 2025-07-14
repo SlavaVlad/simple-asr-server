@@ -25,8 +25,8 @@ Before you begin, ensure you have the following installed:
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/SlavaVlad/faster-whisper-api
-    cd faster-whisper-api
+    git clone https://github.com/SlavaVlad/simple-asr-server
+    cd simple-asr-server
     ```
 3.  **Add API keys:**
 
