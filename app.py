@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-
 # API key header
 api_key_header = APIKeyHeader(name="x-api-key")
 
@@ -108,7 +107,7 @@ def get_audio_duration(file_path: str) -> float:
 async def transcribe_audio(
         file: UploadFile = File(...),
         token: str = Depends(api_key_header),
-        model_name: str = "turbo",
+        model: str = "turbo",
         verbose: Optional[bool] = None,
         temperature: Union[float, Tuple[float, ...]] = (0.0, 0.2, 0.4, 0.6, 0.8, 1.0),
         compression_ratio_threshold: Optional[float] = 2.4,
@@ -127,7 +126,9 @@ async def transcribe_audio(
         logger.warning(f"Invalid token attempt: {token}")
         raise HTTPException(status_code=403, detail="Forbidden")
 
-    logger.info(f"Processing file: {file.filename} with model: {model_name}")
+    model = whisper.load_model(model)  # Load the Whisper model
+
+    logger.info(f"Processing file: {file.filename} with model: {model}")
     metrics = TranscriptionMetrics()
 
     # Save uploaded file
