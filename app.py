@@ -2,10 +2,10 @@ import logging
 import os
 import subprocess
 import time
+from os import getenv
 from typing import Dict
-from typing import Optional, Union, List, Tuple
 
-import whisper
+import gigaam
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
 from fastapi.security import APIKeyHeader
 
@@ -126,21 +126,26 @@ async def transcribe_audio(
 
         # Transcribe
         logger.info("Starting transcription")
-        result = model.transcribe(
-            temp_output_path,
-            verbose=verbose,
-            temperature=temperature,
-            compression_ratio_threshold=compression_ratio_threshold,
-            logprob_threshold=logprob_threshold,
-            no_speech_threshold=no_speech_threshold,
-            condition_on_previous_text=condition_on_previous_text,
-            initial_prompt=initial_prompt,
-            word_timestamps=word_timestamps,
-            prepend_punctuations=prepend_punctuations,
-            append_punctuations=append_punctuations,
-            clip_timestamps=clip_timestamps,
-            hallucination_silence_threshold=hallucination_silence_threshold
-        )
+        if original_duration > 30:
+            logger.info("Audio duration > 30 seconds, using transcribe_longform")
+            transcription_result = model.transcribe_longform(
+                temp_output_path
+            )
+        else:
+            logger.info("Audio duration <= 30 seconds, using transcribe")
+            transcription_result = model.transcribe(
+                temp_output_path
+            )
+
+        full_text = ""
+        for part in transcription_result:
+            if part["transcription"].strip() != "":
+                full_text += part["transcription"].strip() + " "
+
+        result = {
+            "transcription": transcription_result,
+            "text": full_text
+        }
 
         return result
 
