@@ -42,9 +42,9 @@ def get_keys():  # не бейте меня за это
         return keys
 
 
-def convert_audio(input_path: str, output_path: str, speed: float = 1.25):
+def convert_audio(input_path: str, output_path: str, speed: float = 1.0):
     """
-    Convert audio to compatible format and speed up
+    Convert audio to compatible format and speed up if needed.
     """
     try:
         command = [
@@ -62,29 +62,6 @@ def convert_audio(input_path: str, output_path: str, speed: float = 1.25):
     except subprocess.CalledProcessError as e:
         logger.error(f"FFmpeg conversion failed: {e.stderr.decode()}")
         return False
-
-
-class TranscriptionMetrics:
-    def __init__(self):
-        self.start_time = time.time()
-        self.end_time = None
-        self.text_length = 0
-        self.audio_duration = 0
-
-    def stop(self, text: str, audio_duration: float):
-        self.end_time = time.time()
-        self.text_length = len(text)
-        self.audio_duration = audio_duration
-
-    def get_metrics(self) -> Dict[str, float]:
-        processing_time = self.end_time - self.start_time
-        return {
-            "processing_time_seconds": round(processing_time, 2),
-            "characters_per_second": round(self.text_length / processing_time, 2),
-            "audio_realtime_ratio": round(self.audio_duration / processing_time, 2),
-            "audio_duration": round(self.audio_duration, 2),
-            "text_length": self.text_length
-        }
 
 
 def get_audio_duration(file_path: str) -> float:
@@ -111,6 +88,7 @@ async def transcribe_audio(
         verbose: Optional[bool] = None,
         temperature: Union[float, Tuple[float, ...]] = (0.0, 0.2, 0.4, 0.6, 0.8, 1.0),
         compression_ratio_threshold: Optional[float] = 2.4,
+        speed_up: Optional[float] = 1.25,
         logprob_threshold: Optional[float] = -1.0,
         no_speech_threshold: Optional[float] = 0.6,
         condition_on_previous_text: bool = True,
@@ -129,7 +107,6 @@ async def transcribe_audio(
     model = whisper.load_model(model)  # Load the Whisper model
 
     logger.info(f"Processing file: {file.filename} with model: {model}")
-    metrics = TranscriptionMetrics()
 
     # Save uploaded file
     temp_input_path = f"/tmp/input_{file.filename}"
@@ -141,7 +118,7 @@ async def transcribe_audio(
 
         # Convert audio if needed
         logger.debug("Converting audio file")
-        if not convert_audio(temp_input_path, temp_output_path):
+        if not convert_audio(temp_input_path, temp_output_path, speed_up):
             raise HTTPException(status_code=400, detail="Audio conversion failed")
 
         # Get audio duration before speed up
@@ -164,13 +141,6 @@ async def transcribe_audio(
             clip_timestamps=clip_timestamps,
             hallucination_silence_threshold=hallucination_silence_threshold
         )
-
-        # Calculate metrics
-        metrics.stop(result["text"], original_duration)
-        logger.info(f"Transcription metrics: {metrics.get_metrics()}")
-
-        # Add metrics to result
-        result["metrics"] = metrics.get_metrics()
 
         return result
 
