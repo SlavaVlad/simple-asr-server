@@ -1,104 +1,86 @@
-BASED ON https://github.com/salute-developers/GigaAM
-
 # Simple ASR Server
 
-This project provides a RESTful API for audio transcription using a Whisper model. The API is built with FastAPI and runs in a Docker container.
+Простой сервер для автоматического распознавания речи (ASR) на базе OpenAI Whisper.
 
-## Prerequisites
+## Особенности
 
-Before you begin, ensure you have the following installed:
+- Поддержка различных моделей Whisper (tiny, base, small, medium, large, turbo)
+- Три формата вывода: plaintext, simple JSON, полный JSON
+- Параметр speedup для ускорения аудио перед распознаванием
+- Автоматическая конвертация аудио в поддерживаемый формат
+- API ключи для безопасности
+- Docker поддержка
 
-*   [Docker](https://docs.docker.com/get-docker/)
-*   [Docker Compose](https://docs.docker.com/compose/install/)
+## Быстрый старт
 
-## Project Structure
+### Локальная установка
 
+1. Установите зависимости:
+```bash
+pip install -r requirements.txt
 ```
-.
-в”њв”Ђв”Ђ app.py              # Main application file with FastAPI endpoint
-в”њв”Ђв”Ђ docker-compose.yml  # Docker Compose configuration
-в”њв”Ђв”Ђ Dockerfile          # Dockerfile for building the application image
-в”њв”Ђв”Ђ model/              # Directory for Whisper model files
-в””в”Ђв”Ђ requirements.txt    # Python dependencies
+
+2. Скопируйте и настройте переменные окружения:
+```bash
+cp .env.example .env
 ```
 
-## Setup
+3. Запустите сервер:
+```bash
+python app.py
+```
 
-1.  **Clone the repository:**
+### Docker
 
-    ```bash
-    git clone https://github.com/SlavaVlad/simple-asr-server
-    cd simple-asr-server
-    ```
-3.  **Add API keys:**
+1. Постройте и запустите контейнер:
+```bash
+docker-compose up --build
+```
 
-    Create a `keys.txt` file in the root of the project and add your API keys, one per line.
-
-## Building and Running the Project
-
-You can build and run the project using Docker Compose.
-
-1.  **Build the Docker image:**
-
-    ```bash
-    docker-compose build
-    ```
-
-2.  **Run the container:**
-
-    ```bash
-    docker-compose up
-    ```
-
-    The application will be available at `http://0.0.0.0:9854`.
-
-## API Endpoint
+## API
 
 ### POST /transcribe
 
-This endpoint accepts an audio file and returns the transcription.
+Распознавание речи из аудиофайла.
 
-*   **URL:** `/transcribe`
-*   **Method:** `POST`
-*   **Headers:**
-    *   `X-API-Key`: Your API key.
-*   **Form Data:**
-    *   `file`: The audio file to be transcribed.
+**Параметры:**
+- `file` (файл) - Аудиофайл для распознавания
+- `model_name` (опционально) - Модель Whisper для использования
+- `output_format` - Формат вывода: `plaintext`, `simple`, или `json`
+- `speedup` - Коэффициент ускорения аудио (0.25-4.0)
 
-**Example using `curl`:**
+**Заголовки:**
+- `x-api-key` - API ключ
+
+**Примеры:**
 
 ```bash
-curl -X POST "http://localhost:9854/transcribe" \
-     -H "X-API-Key: YOUR_API_KEY" \
-     -F "file=@/path/to/your/audio.wav"
+# Простой текстовый вывод
+curl -X POST "http://localhost:9854/transcribe?output_format=plaintext&speedup=1.5" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -F "file=@audio.wav"
+
+# JSON с только текстом
+curl -X POST "http://localhost:9854/transcribe?output_format=simple" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -F "file=@audio.wav"
+
+# Полный JSON ответ с использованием другой модели
+curl -X POST "http://localhost:9854/transcribe?output_format=json&model_name=base" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -F "file=@audio.wav"
 ```
 
-**Successful Response (200 OK):**
+### GET /health
 
-```json
-{
-  "transcription": [
-    {
-      "start_time": 0.0,
-      "end_time": 2.5,
-      "transcription": "Hello world."
-    }
-  ],
-  "text": "Hello world. ",
-  "metrics": {
-    "processing_time": 5.2,
-    "rtf": 0.5,
-    "word_rate": 2.0
-  }
-}
-```
+Проверка состояния сервера.
 
-**Error Response (401 Unauthorized):**
+## Переменные окружения
 
-If the API key is missing or invalid.
+См. `.env.example` для полного списка доступных переменных:
 
-```json
-{
-  "detail": "Invalid API Key"
-}
-```
+- `HOST` - Хост сервера (по умолчанию: 0.0.0.0)
+- `PORT` - Порт сервера (по умолчанию: 9854)
+- `DEFAULT_MODEL` - Модель по умолчанию (по умолчанию: turbo)
+- `MODEL_DOWNLOAD_ROOT` - Папка для загрузки моделей
+- `KEYS_FILE` - Файл с API ключами

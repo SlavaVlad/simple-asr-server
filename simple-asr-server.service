@@ -1,0 +1,20 @@
+[Unit]
+Description=Whisper ASR Server (ROCM)
+After=network.target
+Wants=network.target
+
+[Service]
+Type=exec
+User=asr
+Group=asr
+WorkingDirectory=/opt/asr
+ExecStart=/opt/asr/start_server.sh
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=asr
+
+[Install]
+WantedBy=multi-user.target

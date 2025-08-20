@@ -1,6 +1,31 @@
 services:
-  whisper-app:
+  simple-asr-server:
     build: .
     ports:
-      - "9854:9854"
-    command: ["python", "app.py"]
+      - "${PORT:-9854}:9854"
+    environment:
+      - HOST=${HOST:-0.0.0.0}
+      - PORT=${PORT:-9854}
+      - DEFAULT_MODEL=${DEFAULT_MODEL:-turbo}
+      - MODEL_DOWNLOAD_ROOT=${MODEL_DOWNLOAD_ROOT:-/app/models}
+      - KEYS_FILE=${KEYS_FILE:-/app/data/keys.txt}
+      - HSA_OVERRIDE_GFX_VERSION=${HSA_OVERRIDE_GFX_VERSION:-10.3.0}
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - video
+      - render
+    security_opt:
+      - seccomp:unconfined
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9854/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+

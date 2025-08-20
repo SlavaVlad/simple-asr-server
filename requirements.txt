@@ -1,8 +1,5 @@
 fastapi
 uvicorn[standard]
 python-multipart
-gigaam
-gigaam[longform]
-ffmpeg-python
-PyYAML
-numpy<2.0.0
+openai-whisper
+python-dotenv
