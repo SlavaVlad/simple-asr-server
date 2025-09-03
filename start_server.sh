@@ -32,6 +32,22 @@ export LOG_LEVEL=${LOG_LEVEL:-"INFO"}
 mkdir -p "${MODEL_DOWNLOAD_ROOT}"
 mkdir -p "$(dirname "${KEYS_FILE}")"
 
+# Check if virtual environment exists, create if not
+VENV_DIR="${APP_DIR}/venv"
+if [ ! -d "${VENV_DIR}" ]; then
+    echo "Creating virtual environment..."
+    python3 -m venv "${VENV_DIR}"
+fi
+
+# Activate virtual environment
+echo "Activating virtual environment..."
+source "${VENV_DIR}/bin/activate"
+
+# Install/upgrade dependencies
+echo "Installing/upgrading dependencies..."
+pip install --upgrade pip
+pip install -r "${APP_DIR}/requirements.txt"
+
 # Change to app directory
 cd "${APP_DIR}"
 
@@ -45,3 +61,4 @@ echo "Log Level: ${LOG_LEVEL}"
 
 # Start the application
 exec python3 app.py
+

@@ -1,5 +1,5 @@
-# Use ROCm compatible Python image as base
-FROM rocm/pytorch:rocm6.1_ubuntu22.04_py3.10_pytorch_2.1.2
+# Use official Python image as base
+FROM python:3.10-slim
 
 # Set working directory
 WORKDIR /app
@@ -31,8 +31,6 @@ RUN mkdir -p /app/models /app/data
 ENV PYTHONUNBUFFERED=1
 ENV MODEL_DOWNLOAD_ROOT=/app/models
 ENV KEYS_FILE=/app/data/keys.txt
-ENV HSA_OVERRIDE_GFX_VERSION=10.3.0
-ENV ROCM_PATH=/opt/rocm
 
 # Expose port
 EXPOSE 9854
@@ -43,4 +41,3 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 
 # Run the application
 CMD ["python", "app.py"]
-
