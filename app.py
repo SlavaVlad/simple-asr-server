@@ -105,6 +105,74 @@ def get_audio_duration(file_path: str) -> float:
         return 0.0
 
 
+@app.post("/transcribe/simple")
+async def transcribe_simple(
+        file: UploadFile = File(...),
+        token: str = Depends(api_key_header),
+        model_name: str = "turbo"
+):
+    # Token validation
+    if token not in get_keys():
+        logger.warning(f"Invalid token attempt: {token}")
+        if token == "" or token is None:
+            raise HTTPException(status_code=401, detail="Forbidden. x-api-key header is missing or empty.")
+        raise HTTPException(status_code=403, detail="Forbidden. Invalid API key.")
+
+    logger.info(f"Processing file: {file.filename} with model: {model_name}")
+
+    if file.size > int(os.getenv("MAX_UPLOAD_SIZE_MB")) * 1024 * 1024:
+        raise HTTPException(status_code=400, detail=f'File size exceeds ${os.getenv("MAX_UPLOAD_SIZE_MB")}MB limit')
+
+    # Save uploaded file
+    temp_input_path = f"/tmp/input_{file.filename}"
+    temp_output_path = f"/tmp/converted_{file.filename}.wav"
+
+    try:
+        with open(temp_input_path, "wb") as f:
+            f.write(await file.read())
+
+        # Convert audio if needed
+        logger.debug("Converting audio file")
+        if not convert_audio(temp_input_path, temp_output_path):
+            raise HTTPException(status_code=400, detail="Audio conversion failed")
+
+        # Get audio duration before speed up
+        original_duration = get_audio_duration(temp_input_path)
+
+        # Transcribe
+        logger.info("Starting transcription")
+        if original_duration > 30:
+            logger.info("Audio duration > 30 seconds, using transcribe_longform")
+            transcription_result = model.transcribe_longform(
+                temp_output_path
+            )
+        else:
+            logger.info("Audio duration <= 30 seconds, using transcribe")
+            transcription_result = model.transcribe(
+                temp_output_path
+            )
+
+        full_text = ""
+        for part in transcription_result:
+            if part["transcription"].strip() != "":
+                full_text += part["transcription"].strip() + " "
+
+        result = full_text
+
+        return result
+
+    except Exception as e:
+        logger.error(f"Transcription failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+    finally:
+        # Cleanup temporary files
+        if os.path.exists(temp_input_path):
+            os.remove(temp_input_path)
+        if os.path.exists(temp_output_path):
+            os.remove(temp_output_path)
+
+
 @app.post("/transcribe")
 async def transcribe_audio(
         file: UploadFile = File(...),
@@ -117,6 +185,10 @@ async def transcribe_audio(
         raise HTTPException(status_code=403, detail="Forbidden")
 
     logger.info(f"Processing file: {file.filename} with model: {model_name}")
+
+    if file.size > int(os.getenv("MAX_UPLOAD_SIZE_MB")) * 1024 * 1024:
+        raise HTTPException(status_code=400, detail=f'File size exceeds ${os.getenv("MAX_UPLOAD_SIZE_MB")}MB limit')
+
     metrics = TranscriptionMetrics()
 
     # Save uploaded file
@@ -139,6 +211,24 @@ async def transcribe_audio(
         logger.info("Starting transcription")
         if original_duration > 30:
             logger.info("Audio duration > 30 seconds, using transcribe_longform")
+            cmd = [
+                'ffmpeg', '-i', temp_input_path,
+                '-filter:a', f'atempo={os.getenv("AUDIO_SPEEDUP", 1.25)}',
+                '-ar', '16000',
+                '-ac', '1',
+                '-c:a', 'pcm_s16le',
+                temp_output_path,
+                '-y'
+            ]
+            log = subprocess.run(cmd, check=True, capture_output=True)
+            logger.debug(f"Running FFmpeg command: {' '.join(cmd)}")
+            logger.info("Audio sped up for longform transcription")
+            if log.stderr:
+                logger.error(f"FFmpeg err log: {log.stderr.decode()}")
+                logger.debug(f"FFmpeg log: {log.stdout.decode()}")
+            else:
+                logger.debug(f"FFmpeg log: {log.stdout.decode()}")
+
             transcription_result = model.transcribe_longform(
                 temp_output_path
             )
@@ -182,7 +272,8 @@ async def transcribe_audio(
 def main():
     import uvicorn
     get_keys()
-    uvicorn.run(app, host="0.0.0.0", port=9854, log_level="debug")
+    uvicorn.run(app, host="0.0.0.0", port=9854, log_level=os.getenv("LOG_LEVEL", "info"))
+
 
 if __name__ == "__main__":
     main()
