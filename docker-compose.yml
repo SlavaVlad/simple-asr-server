@@ -2,25 +2,38 @@ services:
   asr-server:
     build: .
     ports:
-      - "${PORT:-9854}:9854"
+      - "${PORT:-9854}:${PORT:-9854}"
+    env_file:
+      - .env
     environment:
-      - HOST=${HOST:-0.0.0.0}
-      - PORT=${PORT:-9854}
-      - DEFAULT_MODEL=${DEFAULT_MODEL:-turbo}
-      - MODEL_DOWNLOAD_ROOT=${MODEL_DOWNLOAD_ROOT:-/app/models}
-      - KEYS_FILE=${KEYS_FILE:-/app/data/keys.txt}
-      - HSA_OVERRIDE_GFX_VERSION=${HSA_OVERRIDE_GFX_VERSION:-10.3.0}
-      - LOG_LEVEL=${LOG_LEVEL:-info}
-      - AUDIO_SPEEDUP=${AUDIO_SPEEDUP:-1.25}
+      - HOST=${HOST}
+      - PORT=${PORT}
+      - DEFAULT_MODEL=${DEFAULT_MODEL}
+      - MODEL_DEVICE=${MODEL_DEVICE}
+      - MODEL_DOWNLOAD_ROOT=/app/models
+      - KEYS_FILE=/app/data/keys.txt
+      - HSA_OVERRIDE_GFX_VERSION=${HSA_OVERRIDE_GFX_VERSION}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - AUDIO_SPEEDUP=${AUDIO_SPEEDUP}
     volumes:
       - ./models:/app/models
       - ./data:/app/data
-    devices:
-      - /dev/kfd:/dev/kfd
-      - /dev/dri:/dev/dri
+    # GPU support - раскомментируйте нужную секцию
+    # Для NVIDIA GPU:
+#    deploy:
+#      resources:
+#        reservations:
+#          devices:
+#            - driver: nvidia
+#              count: all
+#              capabilities: [gpu]
+#     Для AMD GPU (ROCm):
+     devices:
+       - /dev/kfd:/dev/kfd
+       - /dev/dri:/dev/dri
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9854/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT:-9854}/health"]
       interval: 30s
       timeout: 10s
       retries: 3

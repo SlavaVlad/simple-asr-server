@@ -33,6 +33,7 @@ fi
 export HOST=${HOST:-"0.0.0.0"}
 export PORT=${PORT:-9854}
 export DEFAULT_MODEL=${DEFAULT_MODEL:-"turbo"}
+export MODEL_DEVICE=${MODEL_DEVICE:-"cuda"}
 export MODEL_DOWNLOAD_ROOT=${MODEL_DOWNLOAD_ROOT:-"${APP_DIR}/models"}
 export KEYS_FILE=${KEYS_FILE:-"${APP_DIR}/data/keys.txt"}
 export LOG_LEVEL=${LOG_LEVEL:-"info"}
@@ -86,6 +87,7 @@ echo "Starting Simple ASR Server..."
 echo "Host: ${HOST}"
 echo "Port: ${PORT}"
 echo "Default Model: ${DEFAULT_MODEL}"
+echo "Model Device: ${MODEL_DEVICE}"
 echo "Model Download Root: ${MODEL_DOWNLOAD_ROOT}"
 echo "Keys File: ${KEYS_FILE}"
 echo "Log Level: ${LOG_LEVEL}"
