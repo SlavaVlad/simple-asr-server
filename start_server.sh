@@ -9,6 +9,16 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_DIR="${SCRIPT_DIR}"
 
+# Set ROCm environment variables if ROCm is available
+if [ -d "/opt/rocm" ]; then
+    export ROCM_PATH=${ROCM_PATH:-"/opt/rocm"}
+    export PATH="${ROCM_PATH}/bin:${PATH}"
+    export LD_LIBRARY_PATH="${ROCM_PATH}/lib:${LD_LIBRARY_PATH:-}"
+    # Set HIP_VISIBLE_DEVICES to use all available GPUs
+    export HIP_VISIBLE_DEVICES=${HIP_VISIBLE_DEVICES:-"0"}
+    echo "ROCm detected, configured environment variables"
+fi
+
 # Function to generate a secure API key
 generate_api_key() {
     if command -v openssl >/dev/null 2>&1; then
