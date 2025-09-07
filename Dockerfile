@@ -1,5 +1,8 @@
-# Use official Python image as base
-FROM python:3.10-slim
+# NVIDIA
+#FROM python:3.10-slim
+
+# AMD
+FROM rocm/pytorch:latest
 
 # Set working directory
 WORKDIR /app
